@@ -18,7 +18,7 @@
 
 ## インストール
 
-[Releases](../../releases) から最新の `BakuonOfflinePatch.dll` をダウンロードし、ゲームフォルダの `BepInEx/plugins/` に配置してください。
+[Releases](../../releases) から最新の `BakuonOfflinePatch.zip` をダウンロードして解凍し、`BakuonOfflinePatch.dll` をゲームフォルダの `BepInEx/plugins/` に配置してください。
 
 ```
 bakuon2/
