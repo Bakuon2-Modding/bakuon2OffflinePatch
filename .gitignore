@@ -1,0 +1,17 @@
+# Build outputs
+bin/
+obj/
+*.dll
+*.pdb
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider
+.idea/
+
+# OS Files
+.DS_Store
+Thumbs.db

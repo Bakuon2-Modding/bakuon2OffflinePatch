@@ -1,0 +1,133 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net471</TargetFramework>
+    <AssemblyName>BakuonOfflinePatch</AssemblyName>
+    <LangVersion>7.3</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- ゲームパス（csprojの親ディレクトリ = ゲームフォルダ） -->
+    <GamePath Condition="'$(GamePath)' == ''">$(MSBuildProjectDirectory)\..</GamePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- BepInEx参照 -->
+    <Reference Include="BepInEx">
+      <HintPath>$(GamePath)\BepInEx\core\BepInEx.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- HarmonyX参照 -->
+    <Reference Include="0Harmony">
+      <HintPath>$(GamePath)\BepInEx\core\0Harmony.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- Unity参照 -->
+    <Reference Include="UnityEngine">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <Reference Include="UnityEngine.AIModule">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.AIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- ゲーム本体のDLL (NCMB, Photonのクラスも含まれています) -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- Photon -->
+    <Reference Include="Photon3Unity3D">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\Photon3Unity3D.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- UnityEngine.UI -->
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- TextMeshPro -->
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- ImageConversion (for Texture2D.LoadImage) -->
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- AssetBundle (for loading asset bundles) -->
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- Input (for debug mode key input) -->
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- IMGUI (for debug mode GUI display) -->
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- UIModule (for Canvas access) -->
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- DOTween (for animation) -->
+    <Reference Include="DOTween">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\DOTween.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+
+    <!-- WWW (for image loading) -->
+    <Reference Include="UnityEngine.UnityWebRequestWWWModule">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /y &quot;$(TargetPath)&quot; &quot;$(GamePath)\BepInEx\plugins\&quot;" />
+  </Target>
+
+</Project>
