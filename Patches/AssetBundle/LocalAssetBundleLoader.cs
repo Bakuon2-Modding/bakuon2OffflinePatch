@@ -280,6 +280,9 @@ namespace BakuonOfflinePatch
     {
         private static bool _initialized = false;
         private static HashSet<string> _loadedScenes = new HashSet<string>();
+        private static readonly Queue<string> _pendingScenes = new Queue<string>();
+        private static readonly HashSet<string> _queuedScenes = new HashSet<string>();
+        private static bool _queueRunning = false;
 
         public static void Initialize()
         {
@@ -308,12 +311,41 @@ namespace BakuonOfflinePatch
                     return;
                 }
                 _loadedScenes.Add(assetBundleSceneName);
-                CoroutineRunner.Instance.StartCoroutine(LoadSceneFromBundle(assetBundleSceneName));
+                if (_queuedScenes.Add(assetBundleSceneName))
+                {
+                    _pendingScenes.Enqueue(assetBundleSceneName);
+                    if (!_queueRunning)
+                    {
+                        _queueRunning = true;
+                        CoroutineRunner.Instance.StartCoroutine(ProcessQueue());
+                    }
+                }
             }
             catch (Exception ex)
             {
                 LogHelper.LogError($"[ABSceneLoader] OnSceneLoaded エラー: {ex}");
             }
+        }
+
+        private static IEnumerator ProcessQueue()
+        {
+            while (_pendingScenes.Count > 0)
+            {
+                string sceneName = _pendingScenes.Dequeue();
+                _queuedScenes.Remove(sceneName);
+
+                yield return new WaitForSeconds(UnityEngine.Random.Range(0.05f, 0.25f));
+
+                while (!HitchMonitor.IsFrameLight(Time.unscaledDeltaTime))
+                {
+                    yield return null;
+                }
+
+                HitchMonitor.MarkEvent("ABSceneLoader.Start:" + sceneName);
+                yield return LoadSceneFromBundle(sceneName);
+                HitchMonitor.MarkEvent("ABSceneLoader.Done:" + sceneName);
+            }
+            _queueRunning = false;
         }
 
         private static IEnumerator LoadSceneFromBundle(string sceneName)

@@ -25,6 +25,9 @@ namespace BakuonOfflinePatch
             // （オンライン版のセーブデータへの書き込みを防止）
             ES2RedirectPatches.ApplyPatches(harmony);
 
+            // Hitch monitor (frame spike logging + deferred heavy ops)
+            HitchMonitor.Initialize();
+
             Logger.LogInfo($"Offline Patch v{PluginInfo.PLUGIN_VERSION} loaded");
         }
 
