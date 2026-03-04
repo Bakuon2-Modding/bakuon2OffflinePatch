@@ -22,6 +22,8 @@ namespace BakuonOfflinePatch
         {
             try
             {
+                if (OnlineMode.IsActive) return true; // OnlinePatchに委ねる
+
                 // オフラインモードを有効化
                 PhotonNetwork.offlineMode = true;
 
@@ -51,6 +53,8 @@ namespace BakuonOfflinePatch
         {
             try
             {
+                if (OnlineMode.IsActive) return true; // OnlinePatchに委ねる
+
                 // オフラインモードでは既に接続済みなので、直接ルーム作成へ
                 if (SingletonMonoBehaviour<PUNController>.Instance != null)
                 {
@@ -127,7 +131,8 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                // LogHelper.LogInfo("PhotonChatManager.Connect: オフラインモードでスキップ");
+                if (OnlineMode.IsActive) return true; // OnlinePatchに委ねる
+
                 return false; // 接続処理をスキップ
             }
             catch (Exception ex)
@@ -147,7 +152,8 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                // オフラインモードでスキップ
+                if (OnlineMode.IsActive) return true; // OnlinePatchに委ねる
+
                 return false;
             }
             catch (Exception ex)

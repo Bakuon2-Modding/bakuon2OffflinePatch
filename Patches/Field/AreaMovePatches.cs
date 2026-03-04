@@ -51,15 +51,27 @@ namespace BakuonOfflinePatch
     [HarmonyPatch(typeof(AreaMoveWindowController), "Initialize")]
     public static class AreaMoveWindowController_Initialize_Patch
     {
-        static void Postfix(AreaMoveWindowController __instance, string _joinRoomName)
+        static void Postfix(AreaMoveWindowController __instance)
         {
+            if (!PhotonNetwork.offlineMode) return;
             try
             {
-                // オフラインモードの場合、ゲストメッセージを削除し、説明文を変更
-                if (PhotonNetwork.offlineMode)
+                // カテゴリに応じた初期テキスト（CH未選択状態）
+                // _joinRoomName は "シティ:幕末志士" や "" で直接使えないため、カテゴリから生成
+                string defaultText;
+                switch (__instance.myEnumAreaCategorly)
                 {
-                    __instance.areaMoveText.text = _joinRoomName + "へ移動しますか？\n<size=24>（オフラインモード：CHを選択してください）</size>";
+                    case AreaMoveWindowController.enumAreaCategoly.City:
+                        defaultText = "シティへ移動しますか？\n<size=24>（CHを選択してください）</size>";
+                        break;
+                    case AreaMoveWindowController.enumAreaCategoly.MMOField:
+                        defaultText = "フィールドへ移動しますか？\n<size=24>（CHを選択してください）</size>";
+                        break;
+                    default:
+                        defaultText = __instance.areaMoveText.text; // 元のテキストをそのまま使用
+                        break;
                 }
+                __instance.areaMoveText.text = defaultText;
             }
             catch (Exception ex)
             {
@@ -269,6 +281,36 @@ namespace BakuonOfflinePatch
                 return false;
             }
             return true;
+        }
+    }
+
+
+    // SelectChannelButton Postfix: CH選択時に areaMoveText を選択CH名で更新
+    [HarmonyPatch(typeof(AreaMoveWindowController), "SelectChannelButton")]
+    public static class AreaMoveWindowController_SelectChannelButton_Patch
+    {
+        static void Postfix(AreaMoveWindowController __instance)
+        {
+            if (!PhotonNetwork.offlineMode) return;
+            if (__instance.selectedChannelButton == null) return;
+
+            try
+            {
+                var channelController = __instance.selectedChannelButton.GetComponent<ChannelButtonController>();
+                if (channelController == null) return;
+
+                // roomName 形式: "シティ:幕末志士" or "フィールド:バクマツ平原"
+                string roomName = channelController.myRoomData.roomName;
+                string displayName = roomName.Contains(":")
+                    ? roomName.Substring(roomName.IndexOf(':') + 1)
+                    : roomName;
+
+                __instance.areaMoveText.text = displayName + "へ移動しますか？";
+            }
+            catch (Exception ex)
+            {
+                OfflinePatchPlugin.Logger.LogError($"AreaMoveWindowController_SelectChannelButton_Patch エラー: {ex}");
+            }
         }
     }
 

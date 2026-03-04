@@ -45,6 +45,15 @@ namespace BakuonOfflinePatch
         public const string PLUGIN_NAME = "BakuonOfflinePatch";
         public const string PLUGIN_VERSION = "1.0.0";
     }
+
+    /// <summary>
+    /// 他のMODからオンラインモードを有効化するためのフック。
+    /// OnlinePatch等のBepInDependency(offlinepatch)を持つMODからセットする。
+    /// </summary>
+    public static class OnlineMode
+    {
+        public static bool IsActive { get; set; } = false;
+    }
     // ロガーヘルパークラス（時間付きログ）
     public static class LogHelper
     {
