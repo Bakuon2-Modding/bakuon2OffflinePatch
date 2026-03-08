@@ -125,12 +125,13 @@ namespace BakuonOfflinePatch
         }
     }
 
-    // MatchingRoomController.SendRoomInformation → チャットチャンネルへの送信をスキップ
+    // MatchingRoomController.SendRoomInformation → オフライン時はチャットチャンネルへの送信をスキップ
     [HarmonyPatch(typeof(MatchingRoomController), "SendRoomInformation")]
     public static class MatchingRoomController_SendRoomInformation_Patch
     {
         static bool Prefix()
         {
+            if (OnlineMode.IsActive) return true; // オンライン時は元のメソッドを実行
             return false;
         }
     }

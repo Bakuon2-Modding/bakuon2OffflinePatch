@@ -53,7 +53,7 @@ namespace BakuonOfflinePatch
     {
         static void Postfix(AreaMoveWindowController __instance)
         {
-            if (!PhotonNetwork.offlineMode) return;
+            if (!PhotonNetwork.offlineMode && !OnlineMode.IsActive) return;
             try
             {
                 // カテゴリに応じた初期テキスト（CH未選択状態）
@@ -130,7 +130,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (PhotonNetwork.offlineMode)
+                if (PhotonNetwork.offlineMode || OnlineMode.IsActive)
                 {
                     if (__instance.myEnumAreaCategorly == AreaMoveWindowController.enumAreaCategoly.City)
                     {
@@ -261,9 +261,9 @@ namespace BakuonOfflinePatch
     {
         static bool Prefix()
         {
-            if (PhotonNetwork.offlineMode)
+            if (PhotonNetwork.offlineMode || OnlineMode.IsActive)
             {
-                return false; // オフラインモードではStart Postfixで設定済みなのでスキップ
+                return false; // オフライン/オンラインモードともにStart Postfixで設定済みなのでスキップ
             }
             return true;
         }
@@ -276,7 +276,7 @@ namespace BakuonOfflinePatch
     {
         static bool Prefix()
         {
-            if (PhotonNetwork.offlineMode)
+            if (PhotonNetwork.offlineMode || OnlineMode.IsActive)
             {
                 return false;
             }
@@ -291,7 +291,7 @@ namespace BakuonOfflinePatch
     {
         static void Postfix(AreaMoveWindowController __instance)
         {
-            if (!PhotonNetwork.offlineMode) return;
+            if (!PhotonNetwork.offlineMode && !OnlineMode.IsActive) return;
             if (__instance.selectedChannelButton == null) return;
 
             try
@@ -408,6 +408,29 @@ namespace BakuonOfflinePatch
                             SingletonMonoBehaviour<PUNController>.Instance.LoadScene();
                         }
                     });
+
+                    return false;
+                }
+
+                // オンラインモードの場合、JOIN_OR_CREATEで入室（StartJoinRoomはJOINのみで部屋がないと失敗する）
+                if (OnlineMode.IsActive)
+                {
+                    if (__instance.selectedChannelButton == null)
+                    {
+                        SingletonMonoBehaviour<GameManager>.Instance.ShowSystemMessage("チャンネルを選択してください");
+                        return false;
+                    }
+
+                    var channelController = __instance.selectedChannelButton.GetComponent<ChannelButtonController>();
+                    if (channelController == null) return true;
+
+                    string roomName = channelController.myRoomData.roomName;
+                    string loadScene = channelController.myRoomData.loadSceneName;
+
+                    SingletonMonoBehaviour<GameManager>.Instance.matchingRoomData.gameName = channelController.myRoomData.gameName;
+                    LogHelper.LogInfo($"[AreaMove] JOIN_OR_CREATE: {roomName} / {loadScene}");
+                    SingletonMonoBehaviour<PUNController>.Instance.StartJoinOrCreateRoom(
+                        roomName, loadScene, 30, PUNController.roomType.MMO);
 
                     return false;
                 }
