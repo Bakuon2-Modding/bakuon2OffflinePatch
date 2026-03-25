@@ -93,7 +93,7 @@ namespace BakuonOfflinePatch
                     if (isFirstLaunch)
                     {
                         LogHelper.LogInfo("[GetUserData] 初回起動: 初期アイテム付与開始");
-                        gm.SetMyCoin(2000);
+                        gm.SetMyCoin(898239);
                         gm.IncrementStockItemValue(ItemData.enumItemID.Item_SyakusakaKuji, 99);
                         gm.IncrementStockItemValue(ItemData.enumItemID.Item_Omikuji, 99);
                         LogHelper.LogInfo($"[GetUserData] 初期付与完了: coin={gm.myCoin}, stockItemCount={gm.stockItemDataList.Count}");
