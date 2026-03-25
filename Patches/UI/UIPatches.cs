@@ -254,6 +254,13 @@ namespace BakuonOfflinePatch
 
             SingletonMonoBehaviour<MenuScreenManager>.Instance.OpenRootMenu(__instance.root);
 
+            // 詳細ウィンドウを閉じる（再オープン時に前回の状態が残らないよう）
+            // Awake() は初回のみ実行されるため、SetActive(true)で復帰した際に明示的に閉じ直す
+            if (__instance.illustDetialWindow != null)
+                __instance.illustDetialWindow.SetActive(false);
+            if (__instance.storyDetialWindow != null)
+                __instance.storyDetialWindow.SetActive(false);
+
             foreach (Transform item in __instance.newestRankingContent_Root.transform)
                 UnityEngine.Object.Destroy(item.gameObject);
 
@@ -265,38 +272,6 @@ namespace BakuonOfflinePatch
             SingletonMonoBehaviour<GameManager>.Instance.ShowSystemMessage("");
 
             return false; // 元のOpenRootMenu（GC.Collect()含む）をスキップ
-        }
-    }
-
-
-    // ==========================================
-    // ユーザー投稿: CloseRootMenuでSetActive(false)をスキップ
-    // ==========================================
-    // CloseRootMenu後にMenuScreenManagerがgameObject.SetActive(false)を呼ぶ。
-    // 次回オープン時にSetActive(true)→ Canvas全体リビルドが発生してヒッチになる。
-    // Update()は空なのでアクティブのままにしてもパフォーマンス影響はゼロ。
-    // オフラインではgameObjectをアクティブ維持し、rootパネルのスライドアニメのみ行う。
-    [HarmonyPatch(typeof(UserContentsScreenManager), "CloseRootMenu")]
-    public static class UserContentsScreenManager_CloseRootMenu_Patch
-    {
-        static bool Prefix(UserContentsScreenManager __instance)
-        {
-            if (!PhotonNetwork.offlineMode) return true;
-
-            // 子オブジェクトを破棄（元の処理と同じ）
-            foreach (Transform item in __instance.contentsList_illustDetial.transform)
-                UnityEngine.Object.Destroy(item.gameObject);
-            foreach (Transform item in __instance.contentsList_storyDetial.transform)
-                UnityEngine.Object.Destroy(item.gameObject);
-            foreach (Transform item in __instance.newestRankingContent_Root.transform)
-                UnityEngine.Object.Destroy(item.gameObject);
-
-            // rootパネルのスライドアウトアニメのみ実行（SetActive(false)はしない）
-            __instance.root.transform.DOKill();
-            __instance.root.GetComponent<UnityEngine.RectTransform>()
-                .DOAnchorPos(new UnityEngine.Vector2(0f, 0f), 0.2f);
-
-            return false; // 元のCloseRootMenu（SetActive(false)含む）をスキップ
         }
     }
 
