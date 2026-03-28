@@ -704,8 +704,17 @@ namespace BakuonOfflinePatch
                 if (tipsManager != null)
                     ES2.Save(tipsManager.isFinishedTutorial,          FILE + "?tag=isReadTutorial");
 
-                // emotionList は userID をキーにして offline 側に保存
+                // 入力フィールドの値を emotionList に反映してから保存（元コードの再現）
+                for (int i = 0; i < gm.emotionList.Count; i++)
+                {
+                    int myEnumEmotionID = (int)__instance.emotionDataList[i].property.myEnumEmotionID;
+                    gm.emotionList[i] = myEnumEmotionID + "," + __instance.emotionChatInputFieldList[i].text;
+                }
                 ES2.Save(gm.emotionList, FILE + "?tag=" + gm.userID + "_emotionChat");
+
+                // ショートカットボタンの表示を更新
+                if (SingletonMonoBehaviour<ChatInputManager>.Instance != null)
+                    SingletonMonoBehaviour<ChatInputManager>.Instance.UpdateShotcutButton();
 
                 // 元の処理のうちES2以外の部分はそのまま実行
                 // Rewired.ReInput.userDataStore.Save() をリフレクションで呼ぶ
@@ -733,6 +742,90 @@ namespace BakuonOfflinePatch
                 LogHelper.LogError($"[CommonSettings] 保存エラー: {ex}");
             }
             return false;
+        }
+    }
+
+
+    // ==========================================
+    // GameManager.LoadSaveData パッチ
+    // emotionList を saveData_offline から読み込む
+    // その他の項目（latestRoomName 等）もオフライン側に分離
+    // ==========================================
+    [HarmonyPatch(typeof(GameManager), "LoadSaveData")]
+    public static class GameManager_LoadSaveData_Patch
+    {
+        private const string FILE = "saveData_offline";
+
+        static bool Prefix(GameManager __instance)
+        {
+            try
+            {
+                string uid = __instance.userID;
+
+                __instance.latestRoomName = LoadStr(uid, "latestRoomName", "");
+                __instance.resumeSuteageSeed = LoadInt(uid, "resumeSuteageSeed", 0);
+                __instance.resumeSuteageDungeonMasterDataPropertyName = LoadStr(uid, "resumeSuteageDungeonMasterDataPropertyName", "");
+
+                string macroTag = FILE + "?tag=" + uid + "_macro";
+                if (ES2.Exists(macroTag))
+                {
+                    __instance.macroList = ES2.LoadList<string>(macroTag);
+                }
+                else
+                {
+                    __instance.macroList.Clear();
+                    __instance.macroList.Add("ナイス！");
+                    __instance.macroList.Add("お気になさらず");
+                    __instance.macroList.Add("シールド張ります");
+                    __instance.macroList.Add("回復お願い");
+                    __instance.macroList.Add("先にザコ倒そう");
+                    __instance.macroList.Add("今は耐えよう");
+                    __instance.macroList.Add("今だ攻めよう");
+                    __instance.macroList.Add("！！！？");
+                }
+
+                string emotionTag = FILE + "?tag=" + uid + "_emotionChat";
+                if (ES2.Exists(emotionTag))
+                {
+                    __instance.emotionList = ES2.LoadList<string>(emotionTag);
+                    return false;
+                }
+
+                __instance.emotionList.Clear();
+                __instance.emotionList.Add("1,こんにちは！");
+                __instance.emotionList.Add("2,よろしく！");
+                __instance.emotionList.Add("4,どうもありがとう！");
+                __instance.emotionList.Add("5,いいよ！");
+                __instance.emotionList.Add("7,だめです");
+                __instance.emotionList.Add("8,えへへ");
+                __instance.emotionList.Add("12,敬礼！");
+                __instance.emotionList.Add("13,ガッカリ");
+                __instance.emotionList.Add("18,ゴロゴロ");
+                __instance.emotionList.Add("22,踊りましょう！");
+                __instance.emotionList.Add("0,先に雑魚倒そう！");
+                __instance.emotionList.Add("0,回復お願い！");
+                __instance.emotionList.Add("0,シールド張ります！");
+                __instance.emotionList.Add("0,今だ攻めよう！");
+                __instance.emotionList.Add("0,グッジョブ！");
+                __instance.emotionList.Add("0,ナイス！");
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError($"[LoadSaveData] 読み込みエラー: {ex}");
+            }
+            return false;
+        }
+
+        private static string LoadStr(string uid, string key, string defaultValue)
+        {
+            string tag = FILE + "?tag=" + uid + "_" + key;
+            return ES2.Exists(tag) ? ES2.Load<string>(tag) : defaultValue;
+        }
+
+        private static int LoadInt(string uid, string key, int defaultValue)
+        {
+            string tag = FILE + "?tag=" + uid + "_" + key;
+            return ES2.Exists(tag) ? ES2.Load<int>(tag) : defaultValue;
         }
     }
 
