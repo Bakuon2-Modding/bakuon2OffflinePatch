@@ -146,7 +146,8 @@ namespace BakuonOfflinePatch
     {
         static bool Prefix(object e)
         {
-            if (!PhotonNetwork.offlineMode) return true;
+            // オンラインMOD使用時もNCMBは常にブロックされているためエラーは想定内
+            if (!PhotonNetwork.offlineMode && !OnlineMode.IsActive) return true;
 
             try
             {

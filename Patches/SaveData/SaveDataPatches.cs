@@ -708,7 +708,18 @@ namespace BakuonOfflinePatch
                 ES2.Save(gm.emotionList, FILE + "?tag=" + gm.userID + "_emotionChat");
 
                 // 元の処理のうちES2以外の部分はそのまま実行
-                Rewired.ReInput.userDataStore.Save();
+                // Rewired.ReInput.userDataStore.Save() をリフレクションで呼ぶ
+                try
+                {
+                    var reInputType = Type.GetType("Rewired.ReInput, Rewired_Core");
+                    if (reInputType != null)
+                    {
+                        var userDataStore = reInputType.GetProperty("userDataStore",
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)?.GetValue(null);
+                        userDataStore?.GetType().GetMethod("Save")?.Invoke(userDataStore, null);
+                    }
+                }
+                catch { }
                 SafeAreaController.SetAllSafeArea();
                 gm.ShowSystemMessage("設定をセーブしました");
 
