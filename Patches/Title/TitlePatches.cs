@@ -236,7 +236,8 @@ namespace BakuonOfflinePatch
                 string inputName = __instance.userIDInputField.text;
                 if (string.IsNullOrEmpty(inputName))
                 {
-                    inputName = "OfflinePlayer";
+                    SingletonMonoBehaviour<GameManager>.Instance.ShowAlartWindow("", "プレイヤー名を入力してください");
+                    return false;
                 }
 
                 // CheckNGNameはnameInputFieldを参照するため、userIDInputFieldの値を同期
@@ -264,7 +265,8 @@ namespace BakuonOfflinePatch
             catch (Exception ex)
             {
                 LogHelper.LogError($"[Title] GameStart Prefix エラー: {ex}");
-                return true;
+                SingletonMonoBehaviour<GameManager>.Instance.ShowAlartWindow("", "パッチエラーが発生しました\n詳細はBepInExログを確認してください");
+                return false;
             }
         }
     }

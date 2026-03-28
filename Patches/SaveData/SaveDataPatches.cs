@@ -547,4 +547,183 @@ namespace BakuonOfflinePatch
     }
 
 
+    // ==========================================
+    // GameManager.LoadCommonSaveData パッチ
+    // saveData（元ゲーム）ではなく saveData_offline から読み込む
+    // ==========================================
+    [HarmonyPatch(typeof(GameManager), "LoadCommonSaveData")]
+    public static class GameManager_LoadCommonSaveData_Patch
+    {
+        private const string FILE = "saveData_offline";
+
+        static bool Prefix(GameManager __instance)
+        {
+            try
+            {
+                // niconicoMailAddress / niconicoPassword はオフラインでは不要
+                __instance.niconicoMailAddress = "";
+                __instance.niconicoPassword = "";
+
+                __instance.BGMVolume                                 = Load("BGMVolume",                              0.1f);
+                __instance.SEVolume                                  = Load("SEVolume",                               0.2f);
+                __instance.youtubeVolume                             = Load("youtubeVolume",                          0.1f);
+                __instance.videoThumbnailSize                        = Load("VideoThumbnailSize",                     3.5f);
+                __instance.isPlayerLabelEnabled                      = Load("IsPlayerLabelEnabled",                   true);
+                __instance.isDamageLabelEnabled                      = Load("IsDamageLabelEnabled",                   true);
+                __instance.isYoutubeEnabled                          = Load("IsYoutubeEnabled",                       true);
+                __instance.isYoutubeATypeEnabled                     = Load("IsYoutubeATypeEnabled",                  true);
+                __instance.isTwitterEnabled                          = Load("IsTwitterEnabled",                       true);
+                __instance.isDrawingCanvasEnabled                    = Load("IsDrawingCanvasEnabled",                 true);
+                __instance.isUserIllustContentsBoardEnabled          = Load("IsUserContentsIllustBoardEnabled",       true);
+                __instance.isUserStoryContentsBoardEnabled           = Load("IsUserContentsStoryBoardEnabled",        true);
+                __instance.safeAreaRatio                             = Load("safeAreaRatio",                          0f);
+                __instance.isLowResolutionEnabled                    = Load("IsLowResolutionEnabled",                 false);
+                __instance.isServerChatEnabled                       = Load("IsServerChatEnabled",                    true);
+                __instance.isAccessoryEnabled                        = Load("IsAccessoryEnabled",                     true);
+                __instance.uiScrollSpeed_mouseConfig                 = Load("uiScrollSpeed_mouseConfig",              1f);
+                __instance.cameraMoveDirectionVertical_mouseConfig   = Load("cameraMoveDirectionVertical_mouseConfig",   0);
+                __instance.cameraMoveDirectionHorizontal_mouseConfig = Load("cameraMoveDirectionHorizontal_mouseConfig", 0);
+                __instance.cameraMoveSpeedVertical_mouseConfig       = Load("cameraMoveSpeedVertical_mouseConfig",    1f);
+                __instance.cameraMoveSpeedHorizontal_mouseConfig     = Load("cameraMoveSpeedHorizontal_mouseConfig",  1f);
+                __instance.cameraMoveAxisVertical_padConfig          = Load("cameraMoveAxisVertical_padConfig",       2);
+                __instance.cameraMoveDirectionVertical_padConfig     = Load("cameraMoveDirectionVertical_padConfig",  0);
+                __instance.cameraMoveAxisHorizontal_padConfig        = Load("cameraMoveAxisHorizontal_padConfig",     1);
+                __instance.cameraMoveDirectionHorizontal_padConfig   = Load("cameraMoveDirectionHorizontal_padConfig", 0);
+                __instance.cameraMoveSpeedVertical_padConfig         = Load("cameraMoveSpeedVertical_padConfig",      1f);
+                __instance.cameraMoveSpeedHorizontal_padConfig       = Load("cameraMoveSpeedHorizontal_padConfig",    1f);
+                __instance.keycord_a_padConfig                       = Load("keycord_a_padConfig",                   KeyCode.JoystickButton2);
+                __instance.keycord_b_padConfig                       = Load("keycord_b_padConfig",                   KeyCode.JoystickButton3);
+                __instance.keycord_c_padConfig                       = Load("keycord_c_padConfig",                   KeyCode.JoystickButton1);
+                __instance.keycord_dodge_padConfig                   = Load("keycord_dodge_padConfig",               KeyCode.JoystickButton5);
+                __instance.keycord_jump_padConfig                    = Load("keycord_jump_padConfig",                KeyCode.JoystickButton0);
+                __instance.keycord_bomb_padConfig                    = Load("keycord_bomb_padConfig",                KeyCode.JoystickButton4);
+
+                // TipsManager は GameManager.Awake 時点では未初期化の場合があるためnullチェック
+                var tipsManager = SingletonMonoBehaviour<TipsManager>.Instance;
+                if (tipsManager != null && ES2.Exists(FILE + "?tag=isReadTutorial"))
+                {
+                    tipsManager.isFinishedTutorial = ES2.Load<bool>(FILE + "?tag=isReadTutorial");
+                }
+
+                // AudioManager も同様にnullチェック
+                var audioManager = SingletonMonoBehaviour<AudioManager>.Instance;
+                if (audioManager != null)
+                {
+                    audioManager.ChangeVolume(__instance.BGMVolume / 5f, __instance.SEVolume / 5f);
+                    __instance.SetLinearVolumeToMixerGroup("Master", __instance.SEVolume / 5f);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError($"[CommonSettings] 読み込みエラー: {ex}");
+            }
+            return false;
+        }
+
+        private static float Load(string tag, float defaultValue)
+        {
+            return ES2.Exists(FILE + "?tag=" + tag) ? ES2.Load<float>(FILE + "?tag=" + tag) : defaultValue;
+        }
+
+        private static bool Load(string tag, bool defaultValue)
+        {
+            return ES2.Exists(FILE + "?tag=" + tag) ? ES2.Load<bool>(FILE + "?tag=" + tag) : defaultValue;
+        }
+
+        private static int Load(string tag, int defaultValue)
+        {
+            return ES2.Exists(FILE + "?tag=" + tag) ? ES2.Load<int>(FILE + "?tag=" + tag) : defaultValue;
+        }
+
+        private static KeyCode Load(string tag, KeyCode defaultValue)
+        {
+            return ES2.Exists(FILE + "?tag=" + tag) ? ES2.Load<KeyCode>(FILE + "?tag=" + tag) : defaultValue;
+        }
+    }
+
+
+    // ==========================================
+    // ConfigScreenManager.ApplyConfig パッチ
+    // saveData（元ゲーム）ではなく saveData_offline へ保存する
+    // ==========================================
+    [HarmonyPatch(typeof(ConfigScreenManager), "ApplyConfig")]
+    public static class ConfigScreenManager_ApplyConfig_Patch
+    {
+        private const string FILE = "saveData_offline";
+
+        static bool Prefix(ConfigScreenManager __instance)
+        {
+            try
+            {
+                var gm = SingletonMonoBehaviour<GameManager>.Instance;
+                if (gm == null) return false;
+
+                // niconicoMailAddress / niconicoPassword は保存しない（オフラインでは不要）
+                ES2.Save(gm.BGMVolume,                                FILE + "?tag=BGMVolume");
+                ES2.Save(gm.SEVolume,                                 FILE + "?tag=SEVolume");
+                ES2.Save(gm.youtubeVolume,                            FILE + "?tag=youtubeVolume");
+
+                var videoSlider = (UnityEngine.UI.Slider)typeof(ConfigScreenManager)
+                    .GetField("videoThumbnailSizeSlider", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                    ?.GetValue(__instance);
+                if (videoSlider != null)
+                    ES2.Save(videoSlider.value,                       FILE + "?tag=VideoThumbnailSize");
+
+                ES2.Save(gm.isPlayerLabelEnabled,                     FILE + "?tag=IsPlayerLabelEnabled");
+                ES2.Save(gm.isDamageLabelEnabled,                     FILE + "?tag=IsDamageLabelEnabled");
+                ES2.Save(gm.isYoutubeEnabled,                         FILE + "?tag=IsYoutubeEnabled");
+                ES2.Save(gm.isYoutubeATypeEnabled,                    FILE + "?tag=IsYoutubeATypeEnabled");
+                ES2.Save(gm.isTwitterEnabled,                         FILE + "?tag=IsTwitterEnabled");
+                ES2.Save(gm.isDrawingCanvasEnabled,                   FILE + "?tag=IsDrawingCanvasEnabled");
+                ES2.Save(gm.isUserIllustContentsBoardEnabled,         FILE + "?tag=IsUserContentsIllustBoardEnabled");
+                ES2.Save(gm.isUserStoryContentsBoardEnabled,          FILE + "?tag=IsUserContentsStoryBoardEnabled");
+                ES2.Save(gm.safeAreaRatio,                            FILE + "?tag=safeAreaRatio");
+                ES2.Save(gm.isLowResolutionEnabled,                   FILE + "?tag=IsLowResolutionEnabled");
+                ES2.Save(gm.isServerChatEnabled,                      FILE + "?tag=IsServerChatEnabled");
+                ES2.Save(gm.isAccessoryEnabled,                       FILE + "?tag=IsAccessoryEnabled");
+                ES2.Save(gm.uiScrollSpeed_mouseConfig,                FILE + "?tag=uiScrollSpeed_mouseConfig");
+                ES2.Save(gm.cameraMoveDirectionVertical_mouseConfig,   FILE + "?tag=cameraMoveDirectionVertical_mouseConfig");
+                ES2.Save(gm.cameraMoveSpeedVertical_mouseConfig,       FILE + "?tag=cameraMoveSpeedVertical_mouseConfig");
+                ES2.Save(gm.cameraMoveDirectionHorizontal_mouseConfig, FILE + "?tag=cameraMoveDirectionHorizontal_mouseConfig");
+                ES2.Save(gm.cameraMoveSpeedHorizontal_mouseConfig,     FILE + "?tag=cameraMoveSpeedHorizontal_mouseConfig");
+                ES2.Save(gm.cameraMoveAxisVertical_padConfig,          FILE + "?tag=cameraMoveAxisVertical_padConfig");
+                ES2.Save(gm.cameraMoveDirectionVertical_padConfig,     FILE + "?tag=cameraMoveDirectionVertical_padConfig");
+                ES2.Save(gm.cameraMoveSpeedVertical_padConfig,         FILE + "?tag=cameraMoveSpeedVertical_padConfig");
+                ES2.Save(gm.cameraMoveAxisHorizontal_padConfig,        FILE + "?tag=cameraMoveAxisHorizontal_padConfig");
+                ES2.Save(gm.cameraMoveDirectionHorizontal_padConfig,   FILE + "?tag=cameraMoveDirectionHorizontal_padConfig");
+                ES2.Save(gm.cameraMoveSpeedHorizontal_padConfig,       FILE + "?tag=cameraMoveSpeedHorizontal_padConfig");
+                ES2.Save(gm.keycord_a_padConfig,                      FILE + "?tag=keycord_a_padConfig");
+                ES2.Save(gm.keycord_b_padConfig,                      FILE + "?tag=keycord_b_padConfig");
+                ES2.Save(gm.keycord_c_padConfig,                      FILE + "?tag=keycord_c_padConfig");
+                ES2.Save(gm.keycord_dodge_padConfig,                  FILE + "?tag=keycord_dodge_padConfig");
+                ES2.Save(gm.keycord_jump_padConfig,                   FILE + "?tag=keycord_jump_padConfig");
+                ES2.Save(gm.keycord_bomb_padConfig,                   FILE + "?tag=keycord_bomb_padConfig");
+
+                // チュートリアル状態も offline に保存
+                var tipsManager = SingletonMonoBehaviour<TipsManager>.Instance;
+                if (tipsManager != null)
+                    ES2.Save(tipsManager.isFinishedTutorial,          FILE + "?tag=isReadTutorial");
+
+                // emotionList は userID をキーにして offline 側に保存
+                ES2.Save(gm.emotionList, FILE + "?tag=" + gm.userID + "_emotionChat");
+
+                // 元の処理のうちES2以外の部分はそのまま実行
+                Rewired.ReInput.userDataStore.Save();
+                SafeAreaController.SetAllSafeArea();
+                gm.ShowSystemMessage("設定をセーブしました");
+
+                // isChangedConfig をリセット（privateフィールド）
+                typeof(ConfigScreenManager)
+                    .GetField("isChangedConfig", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                    ?.SetValue(__instance, false);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError($"[CommonSettings] 保存エラー: {ex}");
+            }
+            return false;
+        }
+    }
+
+
 }

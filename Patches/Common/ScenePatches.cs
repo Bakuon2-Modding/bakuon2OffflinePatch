@@ -34,15 +34,8 @@ namespace BakuonOfflinePatch
                 // AssetBundleを既にロード済みとしてマーク
                 __instance.isLoadedAssetBundle = true;
 
-                // ローカルに保存された設定データを読み込む
-                try
-                {
-                    __instance.LoadCommonSaveData();
-                }
-                catch (Exception loadEx)
-                {
-                    OfflinePatchPlugin.Logger.LogWarning($"設定データの読み込みに失敗: {loadEx.Message}");
-                }
+                // 共通設定を saveData_offline から読み込む（LoadCommonSaveData はパッチ済み）
+                __instance.LoadCommonSaveData();
             }
             catch (Exception ex)
             {
