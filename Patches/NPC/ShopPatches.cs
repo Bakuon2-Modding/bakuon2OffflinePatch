@@ -20,7 +20,7 @@ namespace BakuonOfflinePatch
             int incrementValue,
             NpcShopController _npcShopController)
         {
-            if (!PhotonNetwork.offlineMode) return true;
+            if (!PhotonNetwork.offlineMode && !OnlineMode.IsActive) return true;
 
             try
             {
@@ -76,7 +76,7 @@ namespace BakuonOfflinePatch
     {
         static bool Prefix(GameObject _gameObject, string _userID, int _value)
         {
-            if (!PhotonNetwork.offlineMode) return true;
+            if (!PhotonNetwork.offlineMode && !OnlineMode.IsActive) return true;
 
             try
             {
