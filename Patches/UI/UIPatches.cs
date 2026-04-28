@@ -1336,4 +1336,26 @@ namespace BakuonOfflinePatch
         }
     }
 
+    // ==========================================
+    // ConfigScreenManager: 専用設定パネルを常に非表示
+    // ==========================================
+    [HarmonyPatch(typeof(ConfigScreenManager), "RenewCurrentSystemConfigStatus")]
+    public static class ConfigScreenManager_RenewCurrentSystemConfigStatus_Patch
+    {
+        static void Postfix(ConfigScreenManager __instance)
+        {
+            try
+            {
+                if (__instance != null && __instance.GMSettingRoot != null)
+                {
+                    __instance.GMSettingRoot.SetActive(false);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError($"[Config] GMSettingRoot 非表示エラー: {ex}");
+            }
+        }
+    }
+
 }
