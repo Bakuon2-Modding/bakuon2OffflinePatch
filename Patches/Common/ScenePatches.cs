@@ -122,12 +122,20 @@ namespace BakuonOfflinePatch
                 }
 
                 // Homeシーン（元の形式: "{プレイヤー名}のマイホーム"）
+                // 他プレイヤーのホーム訪問中は GameManager.joinAnotherMyHomeUserName に
+                // 訪問先オーナー名が入っているのでそちらを優先する。
+                // ConfirmVisitMyHome (MenuScreenManager) でセットされ、空なら自分の家。
                 if (sceneName == "Home")
                 {
-                    string playerName = SingletonMonoBehaviour<GameManager>.Instance != null
-                        ? SingletonMonoBehaviour<GameManager>.Instance.playerName : "";
-                    if (!string.IsNullOrEmpty(playerName))
-                        return playerName + "のマイホーム";
+                    var gm = SingletonMonoBehaviour<GameManager>.Instance;
+                    if (gm != null)
+                    {
+                        string ownerName = !string.IsNullOrEmpty(gm.joinAnotherMyHomeUserName)
+                            ? gm.joinAnotherMyHomeUserName
+                            : gm.playerName;
+                        if (!string.IsNullOrEmpty(ownerName))
+                            return ownerName + "のマイホーム";
+                    }
                     return "マイホーム";
                 }
             }

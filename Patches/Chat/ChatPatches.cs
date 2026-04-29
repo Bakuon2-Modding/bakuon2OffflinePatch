@@ -24,14 +24,25 @@ namespace BakuonOfflinePatch
             try
             {
                 bool chatAvailable = false;
+                string diag = "";
                 try
                 {
                     var photonChat = SingletonMonoBehaviour<PhotonChatManager>.Instance;
-                    chatAvailable = photonChat != null
-                        && photonChat.chatClient != null
-                        && photonChat.chatClient.CanChat;
+                    var gm = SingletonMonoBehaviour<GameManager>.Instance;
+                    string ch = gm != null ? gm.currentRoomChatChannel : "(gm=null)";
+                    string state = "(null)";
+                    bool canChatChannel = false;
+                    if (photonChat != null && photonChat.chatClient != null)
+                    {
+                        chatAvailable = photonChat.chatClient.CanChat;
+                        state = photonChat.chatClient.State.ToString();
+                        if (!string.IsNullOrEmpty(ch))
+                            canChatChannel = photonChat.chatClient.CanChatInChannel(ch);
+                    }
+                    diag = $"button={_button.name}, CanChat={chatAvailable}, State={state}, channel='{ch}', CanChatInChannel={canChatChannel}";
                 }
-                catch { }
+                catch (Exception innerEx) { diag = $"diag error: {innerEx.Message}"; }
+                LogHelper.LogInfo($"[ChatPatches] PressedEmotionButton Prefix: {diag}");
 
                 if (!chatAvailable)
                 {
@@ -90,14 +101,25 @@ namespace BakuonOfflinePatch
 
                 // PhotonChatが接続されていない場合（オフラインモード）
                 bool chatAvailable = false;
+                string diag = "";
                 try
                 {
                     var photonChat = SingletonMonoBehaviour<PhotonChatManager>.Instance;
-                    chatAvailable = photonChat != null
-                        && photonChat.chatClient != null
-                        && photonChat.chatClient.CanChat;
+                    var gm = SingletonMonoBehaviour<GameManager>.Instance;
+                    string ch = gm != null ? gm.currentRoomChatChannel : "(gm=null)";
+                    string state = "(null)";
+                    bool canChatChannel = false;
+                    if (photonChat != null && photonChat.chatClient != null)
+                    {
+                        chatAvailable = photonChat.chatClient.CanChat;
+                        state = photonChat.chatClient.State.ToString();
+                        if (!string.IsNullOrEmpty(ch))
+                            canChatChannel = photonChat.chatClient.CanChatInChannel(ch);
+                    }
+                    diag = $"macro='{_macroString}', CanChat={chatAvailable}, State={state}, channel='{ch}', CanChatInChannel={canChatChannel}";
                 }
-                catch { }
+                catch (Exception innerEx) { diag = $"diag error: {innerEx.Message}"; }
+                LogHelper.LogInfo($"[ChatPatches] PublishMacro Prefix: {diag}");
 
                 if (!chatAvailable)
                 {
@@ -131,14 +153,25 @@ namespace BakuonOfflinePatch
                 }
 
                 bool chatAvailable = false;
+                string diag = "";
                 try
                 {
                     var photonChat = SingletonMonoBehaviour<PhotonChatManager>.Instance;
-                    chatAvailable = photonChat != null
-                        && photonChat.chatClient != null
-                        && photonChat.chatClient.CanChat;
+                    var gm = SingletonMonoBehaviour<GameManager>.Instance;
+                    string ch = gm != null ? gm.currentRoomChatChannel : "(gm=null)";
+                    string state = "(null)";
+                    bool canChatChannel = false;
+                    if (photonChat != null && photonChat.chatClient != null)
+                    {
+                        chatAvailable = photonChat.chatClient.CanChat;
+                        state = photonChat.chatClient.State.ToString();
+                        if (!string.IsNullOrEmpty(ch))
+                            canChatChannel = photonChat.chatClient.CanChatInChannel(ch);
+                    }
+                    diag = $"input='{_inputString}', CanChat={chatAvailable}, State={state}, channel='{ch}', CanChatInChannel={canChatChannel}";
                 }
-                catch { }
+                catch (Exception innerEx) { diag = $"diag error: {innerEx.Message}"; }
+                LogHelper.LogInfo($"[ChatPatches] InputText Prefix: {diag}");
 
                 if (!chatAvailable)
                 {
@@ -157,6 +190,42 @@ namespace BakuonOfflinePatch
                 LogHelper.LogError($"[ChatPatches] InputText パッチエラー: {ex}");
                 return true;
             }
+        }
+    }
+
+    // ==========================================
+    // 受信側診断: AddChatText でローカルキャラの myUserID と一致するか確認
+    // ==========================================
+    [HarmonyPatch(typeof(ChatInputManager), "AddChatText")]
+    public static class ChatInputManager_AddChatText_Diag_Patch
+    {
+        static void Prefix(string _channelName, string _sender, string _messeageType,
+                           string _playerName, string _chatString, string _userID)
+        {
+            try
+            {
+                var gm = SingletonMonoBehaviour<GameManager>.Instance;
+                var photonChat = SingletonMonoBehaviour<PhotonChatManager>.Instance;
+                string gmUserID = gm != null ? gm.userID : "(gm=null)";
+                string photonUserName = photonChat != null ? photonChat.UserName : "(null)";
+                string playerObjUserID = "(none)";
+                bool senderMatchesPlayerObj = false;
+                if (gm != null && gm.myPlayerObject != null)
+                {
+                    var fcc = gm.myPlayerObject.GetComponent<FieldCharacterController>();
+                    if (fcc != null)
+                    {
+                        playerObjUserID = fcc.myUserID;
+                        senderMatchesPlayerObj = (fcc.myUserID == _sender);
+                    }
+                }
+                LogHelper.LogInfo(
+                    $"[ChatPatches] AddChatText: ch='{_channelName}', type='{_messeageType}', " +
+                    $"sender='{_sender}', text='{_chatString}', " +
+                    $"gm.userID='{gmUserID}', photonChat.UserName='{photonUserName}', " +
+                    $"myPlayerObject.myUserID='{playerObjUserID}', match={senderMatchesPlayerObj}");
+            }
+            catch { }
         }
     }
 
@@ -205,6 +274,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
+                LogHelper.LogInfo($"[ChatPatches] ShowLocalChatBalloon called: '{message}'");
                 var gm = SingletonMonoBehaviour<GameManager>.Instance;
                 if (gm == null || gm.myPlayerObject == null)
                 {
