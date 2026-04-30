@@ -175,10 +175,16 @@ namespace BakuonOfflinePatch
 
                 if (!chatAvailable)
                 {
-                    // 吹き出し表示
-                    ChatBalloonHelper.ShowLocalChatBalloon(_inputString);
+                    // スラッシュコマンド (/big, /gold 等) は吹き出し/チャットログに出さない。
+                    // 元のゲーム挙動 (PrivateServer 接続時) と一致させる。
+                    // ConfigMod 等の他 Prefix がコマンド処理を担当する。
+                    if (_inputString.TrimStart().StartsWith("/"))
+                    {
+                        return false;
+                    }
 
-                    // チャットログにも追加（元コードの AddChatText "Range" と同じ処理）
+                    // 通常チャット: 吹き出し + ログに追加
+                    ChatBalloonHelper.ShowLocalChatBalloon(_inputString);
                     ChatBalloonHelper.AddToChatLog(_inputString);
                     return false;
                 }

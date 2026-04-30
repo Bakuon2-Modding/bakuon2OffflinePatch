@@ -122,20 +122,23 @@ namespace BakuonOfflinePatch
                 }
 
                 // Homeシーン（元の形式: "{プレイヤー名}のマイホーム"）
-                // 他プレイヤーのホーム訪問中は GameManager.joinAnotherMyHomeUserName に
-                // 訪問先オーナー名が入っているのでそちらを優先する。
-                // ConfirmVisitMyHome (MenuScreenManager) でセットされ、空なら自分の家。
+                // 所有者は PhotonNetwork.room.Name (= "{オーナー名}のマイホーム:{gameVersion}") から判定する。
+                // GameManager.joinAnotherMyHomeUserName は MenuScreenManager.ConfirmVisitMyHome で
+                // セットされた後 StartJoinMyHome() でクリアされず残るため、訪問後に自宅へ戻った
+                // タイミングで「他人のホーム」と誤表示される。Photon の実ルーム名を真実とする。
                 if (sceneName == "Home")
                 {
-                    var gm = SingletonMonoBehaviour<GameManager>.Instance;
-                    if (gm != null)
+                    if (PhotonNetwork.inRoom && PhotonNetwork.room != null
+                        && !string.IsNullOrEmpty(PhotonNetwork.room.Name))
                     {
-                        string ownerName = !string.IsNullOrEmpty(gm.joinAnotherMyHomeUserName)
-                            ? gm.joinAnotherMyHomeUserName
-                            : gm.playerName;
-                        if (!string.IsNullOrEmpty(ownerName))
-                            return ownerName + "のマイホーム";
+                        string roomName = PhotonNetwork.room.Name;
+                        int idx = roomName.IndexOf("のマイホーム");
+                        if (idx > 0)
+                            return roomName.Substring(0, idx) + "のマイホーム";
                     }
+                    var gm = SingletonMonoBehaviour<GameManager>.Instance;
+                    if (gm != null && !string.IsNullOrEmpty(gm.playerName))
+                        return gm.playerName + "のマイホーム";
                     return "マイホーム";
                 }
             }
