@@ -19,6 +19,11 @@
 
 ## インストール
 
+### 1. 事前に、MOD環境の構築を済ませてください。
+  > MOD環境のセットアップ方法[Bakuon2-Modding/SetupGuide](https://github.com/Bakuon2-Modding/SetupGuide) 
+
+### 2. パッチダウンロード
+
 [Releases](../../releases) から最新の `BakuonOfflinePatch.zip` をダウンロードして解凍し、`BakuonOfflinePatch.dll` をゲームフォルダの `BepInEx/plugins/` に配置してください。
 
 ```
@@ -46,27 +51,6 @@ bakuon2/
 
 ---
 
-## ビルド（MOD開発者向け・通常は不要）
-パッチのソースコードを改変した場合は以下の手順でビルドしてください。
-ビルドにはゲームの DLL ファイルが必要です。本リポジトリをゲームフォルダ内の `OfflinePatch/` として配置してください。
-
-```
-bakuon2/
-  OfflinePatch/   ← このリポジトリをここにクローン
-  bakuon2_Data/
-  BepInEx/
-  ...
-```
-
-```bash
-cd OfflinePatch
-dotnet build
-```
-
-ビルドに成功すると `BepInEx/plugins/BakuonOfflinePatch.dll` に自動コピーされます。
-
----
-
 ## セーブデータについて
 
 オンラインではプレイデータはサーバー上に保存されますが、オフラインモードではローカルに保存されます。<br>
@@ -89,27 +73,6 @@ dotnet build
 - 動画再生の絵馬
 - 投書箱
 - プレゼント抽選
-
----
-
-## ビルド（MOD開発者向け・通常は不要）
-パッチのソースコードを改変した場合は以下の手順でビルドしてください。
-ビルドにはゲームの DLL ファイルが必要です。本リポジトリをゲームフォルダ内の `OfflinePatch/` として配置してください。
-
-```
-bakuon2/
-  OfflinePatch/   ← このリポジトリをここにクローン
-  bakuon2_Data/
-  BepInEx/
-  ...
-```
-
-```bash
-cd OfflinePatch
-dotnet build
-```
-
-ビルドに成功すると `BepInEx/plugins/BakuonOfflinePatch.dll` に自動コピーされます。
 
 ---
 
