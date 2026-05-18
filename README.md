@@ -60,6 +60,13 @@ bakuon2/
 
 ---
 
+## バグ報告
+
+
+もしバグがありましたら[issues](https://github.com/Bakuon2-Modding/bakuon2OffflinePatch/issues)の`New issue`へ報告ください。<br>
+
+---
+
 ## 免責事項
 
 - 本オフラインパッチは、サービス終了済みの本ゲームをアーカイブ目的でプレイ可能な状態に保つことを目的とした、非公式の非営利の保存プロジェクトです。
