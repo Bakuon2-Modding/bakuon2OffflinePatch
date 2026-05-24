@@ -25,6 +25,10 @@ namespace BakuonOfflinePatch
             // （オンライン版のセーブデータへの書き込みを防止）
             ES2RedirectPatches.ApplyPatches(harmony);
 
+            // Unity AssetBundle キャッシュ（AppData\LocalLow\Unity）の誤削除を防止
+            // （Caching.ClearCache 等は extern のため手動 Patch）
+            CachingGuard.Apply(harmony);
+
             // Hitch monitor (frame spike logging + deferred heavy ops)
             HitchMonitor.Initialize();
 
