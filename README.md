@@ -13,25 +13,11 @@
 
 > 本パッチは **Windows 限定**です。Mac・モバイル版には対応していません。
 
-> MOD環境のセットアップ方法は [Bakuon2-Modding/SetupGuide](https://github.com/Bakuon2-Modding/SetupGuide) を参照してください。
-
 ---
 
 ## インストール
 
-### 1. 事前に、MOD環境の構築を済ませてください。
-  > MOD環境のセットアップ方法[Bakuon2-Modding/SetupGuide](https://github.com/Bakuon2-Modding/SetupGuide) 
-
-### 2. パッチダウンロード
-
-[Releases](../../releases) から最新の `BakuonOfflinePatch.zip` をダウンロードして解凍し、`BakuonOfflinePatch.dll` をゲームフォルダの `BepInEx/plugins/` に配置してください。
-
-```
-bakuon2/
-  BepInEx/
-    plugins/
-      BakuonOfflinePatch.dll   ← ここに置く
-```
+[こちら](./doc/install_guide.pdf)を参考にしてください
 
 ---
 
