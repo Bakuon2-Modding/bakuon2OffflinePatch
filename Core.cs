@@ -47,7 +47,7 @@ namespace BakuonOfflinePatch
     {
         public const string PLUGIN_GUID = "com.bakuon.offlinepatch";
         public const string PLUGIN_NAME = "BakuonOfflinePatch";
-        public const string PLUGIN_VERSION = "1.0.4";
+        public const string PLUGIN_VERSION = "1.0.5";
     }
 
     /// <summary>
