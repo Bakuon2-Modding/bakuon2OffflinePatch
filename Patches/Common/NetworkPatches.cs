@@ -257,8 +257,25 @@ namespace BakuonOfflinePatch
                         }
                         else
                         {
-                            // その他のシーンはアクティブシーンをそのままリロード
+                            // 待合室(MatchingRoom)・遺跡(Suteage_*)・アトラクション(CoopGame/DefenseGame 等)も
+                            // _System シーン(インフラ=StartPosition) と 本体マップシーン(床コライダー) の
+                            // デュアル構成。_System だけリロードすると床が生成されず、キャラ変更後に
+                            // プレイヤーが床を抜けて落下し続けるため、if 側と同様に本体マップも追加ロードする。
                             UnityEngine.SceneManagement.SceneManager.LoadScene(activeSceneName);
+
+                            // アクティブシーンが "_System" 付きなら、対応する本体マップ(床)を追加ロード
+                            if (activeSceneName.EndsWith("_System"))
+                            {
+                                try
+                                {
+                                    UnityEngine.SceneManagement.SceneManager.LoadScene(baseSceneName, UnityEngine.SceneManagement.LoadSceneMode.Additive);
+                                }
+                                catch (Exception mapEx)
+                                {
+                                    LogHelper.LogWarning($"[RejoinCurrentRoom] 本体マップ {baseSceneName} の追加ロード失敗: {mapEx.Message}");
+                                }
+                            }
+
                             UnityEngine.SceneManagement.SceneManager.LoadScene("BaseSystemScene", UnityEngine.SceneManagement.LoadSceneMode.Additive);
                         }
                     }
