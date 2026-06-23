@@ -11,6 +11,20 @@ namespace BakuonOfflinePatch
 {
 
     // ==========================================
+    // オフラインモードでの「現在の部屋名」を保持する
+    // ==========================================
+    // Photonオフラインモードでは LeaveRoom せずに CreateRoom しても
+    // 「既に部屋にいる」ため no-op になり、PhotonNetwork.room.name は最初に
+    // 作成した部屋(通常はHome)のまま固定されてしまう。
+    // そのため room.name は信頼できない。PUNController が組み立てた joinRoomName
+    // (原作と同じ "[識別子]:[userID]:[timestamp]:[gameVersion]" 形式) を遷移ごとに
+    // 記録し、左下のフィールド名表示などの真値として使う。
+    public static class OfflineRoomState
+    {
+        public static string CurrentRoomName;
+    }
+
+    // ==========================================
     // PhotonNetworkのオフラインモードを有効化
     // ==========================================
 
@@ -103,6 +117,9 @@ namespace BakuonOfflinePatch
 
                 if (!string.IsNullOrEmpty(joinRoomName))
                 {
+                    // 現在の部屋名として記録（CreateRoomが no-op でも左下表示の真値として使う）
+                    OfflineRoomState.CurrentRoomName = joinRoomName;
+
                     // オフラインモードでルームを作成
                     PhotonNetwork.CreateRoom(joinRoomName, new RoomOptions { maxPlayers = 30 }, null);
                 }
