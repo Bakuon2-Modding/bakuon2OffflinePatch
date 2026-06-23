@@ -29,6 +29,15 @@ namespace BakuonOfflinePatch
         private const string TAG_MISSION_UPDATE_TIME = "offline_missionUpdateTime";
         private const string TAG_COUNTRY = "offline_country";
 
+        // マイカード（プロフィールカード）の編集内容
+        private const string TAG_MYCARD_SUBNAME = "offline_mycard_subName";
+        private const string TAG_MYCARD_COMMENT = "offline_mycard_comment";
+        private const string TAG_MYCARD_TAPWORD = "offline_mycard_tapWord";
+        private const string TAG_MYCARD_TAPEMOTION = "offline_mycard_tapEmotionID";
+        private const string TAG_MYCARD_AVATAR_UNIT = "offline_mycard_avaterUnitID";
+        private const string TAG_MYCARD_AVATAR_ACC = "offline_mycard_avaterAccessory";
+        private const string TAG_MYCARD_GOODCOUNT = "offline_mycard_goodCount";
+
         private const string SAVE_FILE = "saveData_offline";
 
         /// <summary>
@@ -516,6 +525,91 @@ namespace BakuonOfflinePatch
                 LogHelper.LogError($"[OfflineLoad] 装備アクセサリ読み込みエラー: {ex.Message}");
             }
             return new List<string>();
+        }
+
+        /// <summary>
+        /// マイカードの編集内容（サブネーム・コメント・タップワード）を保存
+        /// </summary>
+        public static void SaveMyCardEdit(string subPlayerName, string comment, string tapWord, string tapEmotionID)
+        {
+            try
+            {
+                ES2.Save(subPlayerName ?? "", SAVE_FILE + "?tag=" + TAG_MYCARD_SUBNAME);
+                ES2.Save(comment ?? "", SAVE_FILE + "?tag=" + TAG_MYCARD_COMMENT);
+                ES2.Save(tapWord ?? "", SAVE_FILE + "?tag=" + TAG_MYCARD_TAPWORD);
+                ES2.Save(string.IsNullOrEmpty(tapEmotionID) ? "0" : tapEmotionID, SAVE_FILE + "?tag=" + TAG_MYCARD_TAPEMOTION);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError($"[OfflineSave] マイカード保存エラー: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// マイカードのアバター（キャラ・装備アクセサリ）を保存
+        /// </summary>
+        public static void SaveMyCardAvater(string avaterUnitID, List<string> avaterEquipAccessoryList)
+        {
+            try
+            {
+                ES2.Save(avaterUnitID ?? "", SAVE_FILE + "?tag=" + TAG_MYCARD_AVATAR_UNIT);
+                ES2.Save(avaterEquipAccessoryList ?? new List<string>(), SAVE_FILE + "?tag=" + TAG_MYCARD_AVATAR_ACC);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError($"[OfflineSave] マイカードアバター保存エラー: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// マイカードの「いいね」数を保存
+        /// </summary>
+        public static void SaveMyCardGoodCount(int goodCount)
+        {
+            try
+            {
+                ES2.Save(goodCount, SAVE_FILE + "?tag=" + TAG_MYCARD_GOODCOUNT);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError($"[OfflineSave] マイカードいいね保存エラー: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 保存済みマイカード内容を UserInformation に反映（未保存タグはスキップ）
+        /// </summary>
+        public static void ApplyMyCardTo(UserInformation userInfo)
+        {
+            if (userInfo == null) return;
+            try
+            {
+                if (ES2.Exists(SAVE_FILE + "?tag=" + TAG_MYCARD_SUBNAME))
+                    userInfo.subPlayerName = ES2.Load<string>(SAVE_FILE + "?tag=" + TAG_MYCARD_SUBNAME);
+                if (ES2.Exists(SAVE_FILE + "?tag=" + TAG_MYCARD_COMMENT))
+                    userInfo.comment = ES2.Load<string>(SAVE_FILE + "?tag=" + TAG_MYCARD_COMMENT);
+                if (ES2.Exists(SAVE_FILE + "?tag=" + TAG_MYCARD_TAPWORD))
+                    userInfo.tapWord = ES2.Load<string>(SAVE_FILE + "?tag=" + TAG_MYCARD_TAPWORD);
+                if (ES2.Exists(SAVE_FILE + "?tag=" + TAG_MYCARD_TAPEMOTION))
+                    userInfo.tapEmotionID = ES2.Load<string>(SAVE_FILE + "?tag=" + TAG_MYCARD_TAPEMOTION);
+
+                if (ES2.Exists(SAVE_FILE + "?tag=" + TAG_MYCARD_AVATAR_UNIT))
+                {
+                    string unit = ES2.Load<string>(SAVE_FILE + "?tag=" + TAG_MYCARD_AVATAR_UNIT);
+                    if (!string.IsNullOrEmpty(unit)) userInfo.avaterUnitID = unit;
+                }
+                if (ES2.Exists(SAVE_FILE + "?tag=" + TAG_MYCARD_AVATAR_ACC))
+                {
+                    var acc = ES2.LoadList<string>(SAVE_FILE + "?tag=" + TAG_MYCARD_AVATAR_ACC);
+                    if (acc != null) userInfo.avaterEquipAccessoryList = acc;
+                }
+                if (ES2.Exists(SAVE_FILE + "?tag=" + TAG_MYCARD_GOODCOUNT))
+                    userInfo.goodCount = ES2.Load<int>(SAVE_FILE + "?tag=" + TAG_MYCARD_GOODCOUNT);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError($"[OfflineLoad] マイカード読み込みエラー: {ex.Message}");
+            }
         }
     }
 

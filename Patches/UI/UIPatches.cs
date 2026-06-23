@@ -407,6 +407,12 @@ namespace BakuonOfflinePatch
                     }
                 }
 
+                // ローカルに永続化（再起動後も保持）
+                if (_userID == gm.userID)
+                {
+                    OfflineSaveDataManager.SaveMyCardEdit(_subPlayerName, _comment, _tapWord, _enumEmotionID);
+                }
+
                 gm.ShowSystemMessage("マイカードを更新しました");
 
                 SingletonMonoBehaviour<MenuScreenManager>.Instance.CloseMyCardEditor();
@@ -455,6 +461,12 @@ namespace BakuonOfflinePatch
                     }
                 }
 
+                // ローカルに永続化（再起動後も保持）
+                if (_userID == gm.userID)
+                {
+                    OfflineSaveDataManager.SaveMyCardAvater(_avaterUnitID, _avaterAccessoryList);
+                }
+
                 gm.ShowSystemMessage("マイカードキャラクターを更新しました");
 
                 SingletonMonoBehaviour<MenuScreenManager>.Instance.CloseMyCardEditor();
@@ -499,6 +511,11 @@ namespace BakuonOfflinePatch
                     if (userInfo.userID == _userID)
                     {
                         userInfo.goodCount++;
+                        // 自分のカードならローカルに永続化
+                        if (_userID == gm.userID)
+                        {
+                            OfflineSaveDataManager.SaveMyCardGoodCount(userInfo.goodCount);
+                        }
                     }
                 }
 
@@ -898,7 +915,12 @@ namespace BakuonOfflinePatch
                 userInfo.avaterUnitID = "0";
             }
 
+            // 永続化済み（ES2: saveData_offline）のマイカード編集内容を基底値として反映。
+            // 再起動後もサブネーム・コメント・タップワード等が復元される。
+            OfflineSaveDataManager.ApplyMyCardTo(userInfo);
+
             // userInformationListに既存の自分のデータがあれば、編集済みの値を使う
+            // （同一セッション内の編集はメモリ側が最新なので永続値より優先する）
             foreach (var existing in gm.userInformationList)
             {
                 if (existing.userID == gm.userID)
