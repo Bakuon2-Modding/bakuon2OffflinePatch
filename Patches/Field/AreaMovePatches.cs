@@ -11,6 +11,29 @@ namespace BakuonOfflinePatch
 {
 
     // ==========================================
+    // フィールド移動時に選択したチャンネルを保持する
+    // （シーン名だけでは CH 番号を復元できないため。
+    //  MMOFieldは複数CHが同一シーンを共有する）
+    // ==========================================
+    public static class OfflineFieldSelection
+    {
+        public static string LoadSceneName;   // 例: "MMOField_1"
+        public static int Channel;            // 選択したCH番号
+        public static string FieldDisplayName; // 例: "バクマツ平原"（"フィールド:"接頭辞なし）
+
+        public static void Set(ChannelButtonController controller)
+        {
+            if (controller == null || controller.myRoomData == null) return;
+            LoadSceneName = controller.myRoomData.loadSceneName;
+            Channel = controller.myRoomData.channel;
+            string rn = controller.myRoomData.roomName ?? "";
+            FieldDisplayName = rn.Contains(":")
+                ? rn.Substring(rn.IndexOf(':') + 1)
+                : rn;
+        }
+    }
+
+    // ==========================================
     // AreaMoveWindowController パッチ（エリア移動）
     // ==========================================
 
@@ -341,6 +364,9 @@ namespace BakuonOfflinePatch
 
                     string loadSceneName = channelController.myRoomData.loadSceneName;
 
+                    // 選択したチャンネルを保持（フィールド名表示でCH番号を正しく出すため）
+                    OfflineFieldSelection.Set(channelController);
+
                     // ウィンドウを閉じる
                     __instance.PressedCancelButton();
 
@@ -426,6 +452,9 @@ namespace BakuonOfflinePatch
 
                     string roomName = channelController.myRoomData.roomName;
                     string loadScene = channelController.myRoomData.loadSceneName;
+
+                    // 選択したチャンネルを保持（フィールド名表示でCH番号を正しく出すため）
+                    OfflineFieldSelection.Set(channelController);
 
                     SingletonMonoBehaviour<GameManager>.Instance.matchingRoomData.gameName = channelController.myRoomData.gameName;
                     LogHelper.LogInfo($"[AreaMove] JOIN_OR_CREATE: {roomName} / {loadScene}");

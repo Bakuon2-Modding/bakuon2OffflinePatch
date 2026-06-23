@@ -80,8 +80,18 @@ namespace BakuonOfflinePatch
                 }
 
                 // MMOFieldシーンの判定（元の形式: "{フィールド名}(CH{n})"）
+                // 同一シーンを複数CHが共有するため、シーン名からはCH番号を復元できない。
+                // フィールド移動時に選択したCH番号(OfflineFieldSelection)を優先して使う。
                 if (sceneName.StartsWith("MMOField"))
                 {
+                    if (OfflineFieldSelection.LoadSceneName != null
+                        && !string.IsNullOrEmpty(OfflineFieldSelection.FieldDisplayName)
+                        && sceneName.Contains(OfflineFieldSelection.LoadSceneName))
+                    {
+                        return $"{OfflineFieldSelection.FieldDisplayName}(CH{OfflineFieldSelection.Channel})";
+                    }
+
+                    // フォールバック（選択情報がない場合）
                     if (sceneName.Contains("MMOField_1")) return "バクマツ平原(CH1)";
                     if (sceneName.Contains("MMOField_2")) return "ゲラゴッチ溶岩洞(CH1)";
                     if (sceneName.Contains("MMOField_3")) return "シロマリモ氷海域(CH1)";
