@@ -367,6 +367,10 @@ namespace BakuonOfflinePatch
                     // 選択したチャンネルを保持（フィールド名表示でCH番号を正しく出すため）
                     OfflineFieldSelection.Set(channelController);
 
+                    // 経路A(直接LoadScene)はPUNcontrollerの部屋を作らないため、
+                    // 前回の遺跡/アトラクション部屋名が残らないようクリアする。
+                    OfflineRoomState.CurrentRoomName = null;
+
                     // ウィンドウを閉じる
                     __instance.PressedCancelButton();
 

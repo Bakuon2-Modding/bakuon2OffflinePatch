@@ -49,6 +49,44 @@ namespace BakuonOfflinePatch
     [HarmonyPatch(typeof(OnlineRoomController), "Start")]
     public static class OnlineRoomController_Start_Patch
     {
+        // オフラインでも経路B(PUNController経由: 遺跡/アトラクション/バトル/Home)は
+        // 原作同様の複雑な部屋名 ("memo:userID:timestamp:gameVersion" 等) を組み立てている。
+        // ただし Photonオフラインモードでは LeaveRoom せず CreateRoom しても no-op になるため
+        // PhotonNetwork.room.name は最初の部屋(Home)で固定されてしまい当てにできない。
+        // そこで遷移ごとに記録した OfflineRoomState.CurrentRoomName を真値として使う。
+        // (City/MMOField は経路A: 直接 LoadScene し、その際 CurrentRoomName は null クリアされる)
+        private static string GetValidRoomName()
+        {
+            string raw = null;
+            if (!string.IsNullOrEmpty(OfflineRoomState.CurrentRoomName))
+            {
+                raw = OfflineRoomState.CurrentRoomName;
+            }
+            // フォールバック: オンラインモード等、room.name が信頼できる場合
+            else if (PhotonNetwork.inRoom && PhotonNetwork.room != null
+                && !string.IsNullOrEmpty(PhotonNetwork.room.Name))
+            {
+                raw = PhotonNetwork.room.Name;
+            }
+
+            if (raw == null) return null;
+            return FormatRoomDisplayName(raw);
+        }
+
+        // 部屋名 "[識別子]:[userID]:[timestamp]:[gameVersion]" → "[識別子]:[gameVersion]"
+        // 中間の userID(オフラインでは名前と同一)・タイムスタンプは部屋名の重複回避用の
+        // 内部情報なので表示からは省く。城名のように "[識別子]:[gameVersion]" の2要素しか
+        // 無い場合はそのまま。
+        private static string FormatRoomDisplayName(string raw)
+        {
+            string[] parts = raw.Split(':');
+            if (parts.Length >= 2)
+            {
+                return parts[0] + ":" + parts[parts.Length - 1];
+            }
+            return raw;
+        }
+
         // シーン名からルーム名を取得
         private static string GetRoomNameFromScene()
         {
@@ -100,9 +138,12 @@ namespace BakuonOfflinePatch
                 }
 
                 // ステアゲ遺跡シーンの判定
+                // 原作では room.name = "[ダンジョン名]:[userID]:[timestamp]:[gameVersion]"
+                // (FastTravelScreenManager.MoveAreaSuteageSingle/MatchingRoom 経由で作成)。
+                // オフラインでもこの部屋名で CreateRoom 済みなので、そのまま使う。
                 if (sceneName.StartsWith("Suteage_"))
                 {
-                    return "ステアゲイル遺跡";
+                    return GetValidRoomName() ?? "ステアゲイル遺跡";
                 }
 
                 // 待合室
@@ -117,13 +158,20 @@ namespace BakuonOfflinePatch
                     return "待合室";
                 }
 
-                // アトラクション・バトル系シーン（待合室経由で matchingRoomData.gameName に名前が設定される）
+                // アトラクション・バトル系シーン
+                // 原作では room.name = "[ゲーム名/ボス名/城名]:[userID]:[timestamp]:[gameVersion]"
+                // (FastTravelScreenManager/NpcCastleSelectController 経由で作成)。
+                // オフラインでもこの部屋名で CreateRoom 済みなので、そのまま使うのが原作準拠。
+                // 部屋が無い場合のフォールバックとして matchingRoomData.gameName を使う。
                 if (sceneName.StartsWith("CoopGame_") || sceneName == "DefenseGame" ||
                     sceneName.StartsWith("TeamBattle") || sceneName.StartsWith("SoloBattle") ||
                     sceneName.StartsWith("WarMain") || sceneName.StartsWith("WarSub") ||
                     sceneName.StartsWith("WarCarry") || sceneName.StartsWith("Boss") ||
                     sceneName.StartsWith("CharacterEpisode"))
                 {
+                    string validRoomName = GetValidRoomName();
+                    if (validRoomName != null) return validRoomName;
+
                     var gm2 = SingletonMonoBehaviour<GameManager>.Instance;
                     if (gm2 != null && gm2.matchingRoomData != null && !string.IsNullOrEmpty(gm2.matchingRoomData.gameName))
                     {
