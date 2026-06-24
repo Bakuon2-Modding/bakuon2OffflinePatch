@@ -303,7 +303,10 @@ namespace BakuonOfflinePatch
     // マイホーム・マップ編集
     // ======================================================
 
-    // SaveEditMapData - マップ編集データ（メッセージ表示、セーブ済みフラグを更新）
+    // SaveEditMapData - マップ編集データ（マイホーム内装をローカル JSON へ保存）
+    // 元の実装は NCMB(UserData.EditMap)へ保存するが、オフライン/PrivateServer では
+    // HomeLayoutStore で <persistentDataPath>/MyRoomLayouts/myroom.json に永続化する。
+    // 呼び出し元 RiumMapEditorManager.SaveMapData() が直前に gm.editMapList を最新化済み。
     [HarmonyPatch(typeof(NCMBManager), "SaveEditMapData")]
     public static class NCMBManager_SaveEditMapData_Patch
     {
@@ -311,7 +314,9 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                SingletonMonoBehaviour<GameManager>.Instance?.ShowSystemMessage("マップデータをセーブしました");
+                var gm = SingletonMonoBehaviour<GameManager>.Instance;
+                HomeLayoutStore.SaveMyRoom(gm?.editMapList);
+                gm?.ShowSystemMessage("マップデータをセーブしました");
                 try
                 {
                     var editor = SingletonMonoBehaviour<RiumMapEditorManager>.Instance;
@@ -326,6 +331,8 @@ namespace BakuonOfflinePatch
     }
 
     // GetAnotherMyHomeMapEditData - 他プレイヤーの家データ取得（オフライン不可）
+    // ※ PrivateServer 時は PrivateServerMod 側の High 優先 Prefix が先に return false し、
+    //   ここはスキップされる（純オフライン時のみ動作）。
     [HarmonyPatch(typeof(NCMBManager), "GetAnotherMyHomeMapEditData")]
     public static class NCMBManager_GetAnotherMyHomeMapEditData_Patch
     {
@@ -334,6 +341,34 @@ namespace BakuonOfflinePatch
             SingletonMonoBehaviour<GameManager>.Instance?.ShowSystemMessage(
                 "オフラインモードのため他プレイヤーの家データは取得できません");
             return false;
+        }
+    }
+
+    // RiumMapEditorManager.Start - 自宅入室時に内装をローカル JSON から読み込む
+    // 元の実装は gm.editMapList(=NCMBログイン時にロード)を使うが、オフラインでは
+    // editMapList が空のままなので、入室の都度 myroom.json を読み直して流し込む。
+    // これにより再起動後も内装が維持され、ゲーム外で myroom.json を差し替えて
+    // 入り直せば内装が入れ替わる(要件1・3)。元メソッドの LoadMapData は委譲する。
+    [HarmonyPatch(typeof(RiumMapEditorManager), "Start")]
+    public static class RiumMapEditorManager_Start_Patch
+    {
+        static bool Prefix()
+        {
+            try
+            {
+                var gm = SingletonMonoBehaviour<GameManager>.Instance;
+                if (gm != null && PhotonNetwork.room != null)
+                {
+                    string myHomeName = gm.playerName + "のマイホーム:" + gm.gameVersion;
+                    if (PhotonNetwork.room.Name == myHomeName)
+                    {
+                        // 自宅 → ファイルから内装を流し込む。元の LoadMapData(editMapList) が描画する。
+                        gm.editMapList = HomeLayoutStore.LoadMyRoom();
+                    }
+                }
+            }
+            catch (Exception ex) { LogHelper.LogError($"[RiumMapEditorStart] {ex}"); }
+            return true; // 元メソッド(自宅ロード/他人宅取得)に委譲
         }
     }
 

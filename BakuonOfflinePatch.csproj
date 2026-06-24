@@ -124,6 +124,12 @@
       <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+
+    <!-- JSONSerialize (for JsonUtility: マイホーム内装のローカル保存) -->
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>$(GamePath)\bakuon2_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

@@ -213,7 +213,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 __instance.GetType().GetMethod("RunDelegateOnFinishedNetworkProcess",
                     BindingFlags.Public | BindingFlags.Instance)
@@ -246,7 +246,7 @@ namespace BakuonOfflinePatch
     {
         static bool Prefix(UserContentsScreenManager __instance)
         {
-            if (!PhotonNetwork.offlineMode) return true;
+            if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
             // GC.Collect() と Resources.UnloadUnusedAssets() を両方スキップ
             if (__instance.coroutine != null)
@@ -735,7 +735,7 @@ namespace BakuonOfflinePatch
     {
         static bool Prefix(MenuScreenManager __instance)
         {
-            if (!PhotonNetwork.offlineMode) return true;
+            if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
             try
             {

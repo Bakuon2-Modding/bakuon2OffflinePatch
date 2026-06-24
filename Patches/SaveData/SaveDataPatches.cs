@@ -699,12 +699,21 @@ namespace BakuonOfflinePatch
                     tipsManager.isFinishedTutorial = ES2.Load<bool>(FILE + "?tag=isReadTutorial");
                 }
 
-                // AudioManager も同様にnullチェック
+                // AudioManager は Instance(=FindObjectOfType) が非nullでも Awake 未実行だと
+                // _bgmSource / _seSourceList が未初期化のため ChangeVolume 内部で NRE になる。
+                // Awake 済み(=_bgmSource 初期化済み)を確認してから呼ぶ。
                 var audioManager = SingletonMonoBehaviour<AudioManager>.Instance;
-                if (audioManager != null)
+                var bgmSource = audioManager != null
+                    ? AccessTools.Field(typeof(AudioManager), "_bgmSource")?.GetValue(audioManager)
+                    : null;
+                if (audioManager != null && bgmSource != null)
                 {
                     audioManager.ChangeVolume(__instance.BGMVolume / 5f, __instance.SEVolume / 5f);
                     __instance.SetLinearVolumeToMixerGroup("Master", __instance.SEVolume / 5f);
+                }
+                else
+                {
+                    LogHelper.LogInfo("[CommonSettings] AudioManager 未初期化のため音量適用をスキップ");
                 }
             }
             catch (Exception ex)

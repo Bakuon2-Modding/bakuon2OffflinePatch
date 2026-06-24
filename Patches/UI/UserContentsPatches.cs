@@ -27,6 +27,14 @@ namespace BakuonOfflinePatch
         private const string SAVE_FILE = "saveData_offline";
         private const string TAG_USER_CONTENTS = "offline_userContents";
 
+        // ユーザーコンテンツをローカル処理すべきモードか。
+        // オフラインだけでなく PrivateServer 接続中 (OnlineMode.IsActive) も対象にする。
+        // PrivateServer では NCMB が無く、素通りさせると実 NCMB へ飛んで機能しないため。
+        public static bool IsLocalContentMode
+        {
+            get { return PhotonNetwork.offlineMode || OnlineMode.IsActive; }
+        }
+
         public static string ImageDirectory
         {
             get
@@ -404,7 +412,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 // NCMBobjectIDがなければ設定。
                 // tempUserContentsData.Initialize()でリセットされる可能性があるため、
@@ -454,7 +462,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 OfflineUserContentsStore.EnsureLoaded();
 
@@ -463,6 +471,16 @@ namespace BakuonOfflinePatch
 
                 foreach (var data in OfflineUserContentsStore.localContentsList)
                 {
+                    // マルチ(PrivateServer)では他プレイヤーのカードに自分のコンテンツを
+                    // 載せないよう、userID が一致するものだけを返す。
+                    // (オフライン単独では自分しか存在しないので実質全件)
+                    if (!string.IsNullOrEmpty(_userInformation.userID)
+                        && !string.IsNullOrEmpty(data.userID)
+                        && data.userID != _userInformation.userID)
+                    {
+                        continue;
+                    }
+
                     if (data.myContentsType == UserContentsData.ContentsType.IMAGE)
                     {
                         _userInformation.userIllustContentsDataList.Add(data);
@@ -503,7 +521,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 OfflineUserContentsStore.EnsureLoaded();
                 var published = OfflineUserContentsStore.GetPublished();
@@ -550,7 +568,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 var data = OfflineUserContentsStore.FindByID(_id);
                 var boardManager = SingletonMonoBehaviour<UserContentsBoardManager>.Instance;
@@ -590,7 +608,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 var data = OfflineUserContentsStore.FindByID(_id);
                 if (data != null)
@@ -660,7 +678,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 if (_className == "UserContents")
                 {
@@ -693,7 +711,7 @@ namespace BakuonOfflinePatch
     {
         static void Postfix(UserContentPopupWindowController __instance, bool _result)
         {
-            if (!_result || !PhotonNetwork.offlineMode) return;
+            if (!_result || !OfflineUserContentsStore.IsLocalContentMode) return;
             try
             {
                 var temp = __instance.tempUserContentsData;
@@ -723,7 +741,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 OfflineUserContentsStore.EnsureLoaded();
                 var published = OfflineUserContentsStore.GetPublished();
@@ -768,7 +786,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 OfflineUserContentsStore.EnsureLoaded();
                 var published = OfflineUserContentsStore.GetPublished();
@@ -811,7 +829,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 // Win32ファイルダイアログで画像を選択
                 string filter = "画像ファイル (*.png;*.jpg;*.bmp)\0*.png;*.jpg;*.jpeg;*.bmp\0すべてのファイル (*.*)\0*.*\0";
@@ -880,7 +898,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 if (!string.IsNullOrEmpty(_url) && _url.StartsWith("local:"))
                 {
@@ -951,7 +969,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 if (!string.IsNullOrEmpty(_url) && _url.StartsWith("local:"))
                 {
@@ -1255,7 +1273,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 // PhotonChat購読をスキップ
                 // isUserContentsBoardEnabledを有効化
@@ -1289,7 +1307,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 // イラスト更新タイマー
                 __instance.illustRenewTimer -= Time.deltaTime;
@@ -1402,7 +1420,7 @@ namespace BakuonOfflinePatch
     {
         static bool Prefix()
         {
-            if (PhotonNetwork.offlineMode) return false;
+            if (OfflineUserContentsStore.IsLocalContentMode) return false;
             return true;
         }
     }
@@ -1420,7 +1438,7 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                if (!OfflineUserContentsStore.IsLocalContentMode) return true;
 
                 if (!string.IsNullOrEmpty(_url) && _url.StartsWith("local:"))
                 {
