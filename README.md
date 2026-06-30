@@ -17,7 +17,7 @@
 
 ## インストール
 
-[こちら](./doc/install_guide.pdf)を参考にしてください
+[こちら](https://github.com/Bakuon2-Modding/bakuon2OfflinePatchSetupGuide)を参考にしてください
 
 ---
 
