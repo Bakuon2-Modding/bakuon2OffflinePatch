@@ -28,8 +28,8 @@ namespace BakuonOfflinePatch
         private const string TAG_USER_CONTENTS = "offline_userContents";
 
         // ユーザーコンテンツをローカル処理すべきモードか。
-        // オフラインだけでなく PrivateServer 接続中 (OnlineMode.IsActive) も対象にする。
-        // PrivateServer では NCMB が無く、素通りさせると実 NCMB へ飛んで機能しないため。
+        // オフラインだけでなくマルチプレイ接続中 (OnlineMode.IsActive) も対象にする。
+        // マルチプレイ接続時は NCMB が無く、素通りさせると実 NCMB へ飛んで機能しないため。
         public static bool IsLocalContentMode
         {
             get { return PhotonNetwork.offlineMode || OnlineMode.IsActive; }
@@ -471,7 +471,7 @@ namespace BakuonOfflinePatch
 
                 foreach (var data in OfflineUserContentsStore.localContentsList)
                 {
-                    // マルチ(PrivateServer)では他プレイヤーのカードに自分のコンテンツを
+                    // マルチプレイ接続時は他プレイヤーのカードに自分のコンテンツを
                     // 載せないよう、userID が一致するものだけを返す。
                     // (オフライン単独では自分しか存在しないので実質全件)
                     if (!string.IsNullOrEmpty(_userInformation.userID)

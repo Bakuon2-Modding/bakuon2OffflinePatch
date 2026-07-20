@@ -304,7 +304,7 @@ namespace BakuonOfflinePatch
     // ======================================================
 
     // SaveEditMapData - マップ編集データ（マイホーム内装をローカル JSON へ保存）
-    // 元の実装は NCMB(UserData.EditMap)へ保存するが、オフライン/PrivateServer では
+    // 元の実装は NCMB(UserData.EditMap)へ保存するが、オフライン/マルチプレイ接続時は
     // HomeLayoutStore で <persistentDataPath>/MyRoomLayouts/myroom.json に永続化する。
     // 呼び出し元 RiumMapEditorManager.SaveMapData() が直前に gm.editMapList を最新化済み。
     [HarmonyPatch(typeof(NCMBManager), "SaveEditMapData")]
@@ -331,7 +331,7 @@ namespace BakuonOfflinePatch
     }
 
     // GetAnotherMyHomeMapEditData - 他プレイヤーの家データ取得（オフライン不可）
-    // ※ PrivateServer 時は PrivateServerMod 側の High 優先 Prefix が先に return false し、
+    // ※ マルチプレイ接続時は MultiplayerMod 側の High 優先 Prefix が先に return false し、
     //   ここはスキップされる（純オフライン時のみ動作）。
     [HarmonyPatch(typeof(NCMBManager), "GetAnotherMyHomeMapEditData")]
     public static class NCMBManager_GetAnotherMyHomeMapEditData_Patch

@@ -146,7 +146,7 @@ namespace BakuonOfflinePatch
                 if (!chatAvailable)
                 {
                     // スラッシュコマンド (/big, /gold 等) は吹き出し/チャットログに出さない。
-                    // 元のゲーム挙動 (PrivateServer 接続時) と一致させる。
+                    // 元のゲーム挙動 (マルチプレイ接続時) と一致させる。
                     // ConfigMod 等の他 Prefix がコマンド処理を担当する。
                     if (_inputString.TrimStart().StartsWith("/"))
                     {

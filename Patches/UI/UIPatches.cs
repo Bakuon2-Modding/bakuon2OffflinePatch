@@ -348,7 +348,8 @@ namespace BakuonOfflinePatch
     {
         static bool Prefix(NCMBManager __instance)
         {
-            if (!PhotonNetwork.offlineMode) return true;
+            // マルチプレイ(OnlineMode)中もNCMBは常にブロックされるため、ローカル保存で代替する
+            if (!PhotonNetwork.offlineMode && !OnlineMode.IsActive) return true;
 
             var gm = SingletonMonoBehaviour<GameManager>.Instance;
 
