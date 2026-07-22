@@ -95,7 +95,17 @@ namespace BakuonOfflinePatch
                 var ftcNet = _gameObject.GetComponent<FieldTreasureController_Network>();
                 if (ftcNet != null)
                 {
-                    ftcNet.GotFieldTreasure(_userID);
+                    // コインは所有者(通常はMasterClient)のクライアントでしか OnTriggerEnter が
+                    // 発火しないため、マルチプレイ中は原作同様 RPC で全クライアントへ通知する。
+                    // ローカル直接呼び出しだと取得者が別クライアントの場合に加算・SEが届かない。
+                    if (OnlineMode.IsActive && !PhotonNetwork.offlineMode && PhotonNetwork.inRoom)
+                    {
+                        ftcNet.myPhotonView.RPC("GotFieldTreasure", PhotonTargets.All, _userID);
+                    }
+                    else
+                    {
+                        ftcNet.GotFieldTreasure(_userID);
+                    }
                     ftcNet.DestoryMine();
                     return false;
                 }
