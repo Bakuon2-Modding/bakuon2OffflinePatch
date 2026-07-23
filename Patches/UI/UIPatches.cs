@@ -286,7 +286,8 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                // マルチプレイ接続中(OnlineMode)も実NCMBは存在しないためバイパスする
+                if (!PhotonNetwork.offlineMode && !OnlineMode.IsActive) return true;
 
                 __instance.GetType().GetMethod("RunDelegateOnFinishedNetworkProcess",
                     BindingFlags.Public | BindingFlags.Instance)
@@ -317,9 +318,10 @@ namespace BakuonOfflinePatch
         {
             try
             {
-                if (!PhotonNetwork.offlineMode) return true;
+                // マルチプレイ接続中(OnlineMode)も実NCMBは存在しないためバイパスする
+                if (!PhotonNetwork.offlineMode && !OnlineMode.IsActive) return true;
 
-                SingletonMonoBehaviour<GameManager>.Instance.ShowSystemMessage("オフラインモードでは投書できません");
+                SingletonMonoBehaviour<GameManager>.Instance.ShowSystemMessage("この環境では投書できません");
 
                 __instance.GetType().GetMethod("RunDelegateOnFinishedNetworkProcess",
                     BindingFlags.Public | BindingFlags.Instance)
