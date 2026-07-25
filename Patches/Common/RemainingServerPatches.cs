@@ -331,7 +331,7 @@ namespace BakuonOfflinePatch
     }
 
     // GetAnotherMyHomeMapEditData - 他プレイヤーの家データ取得（オフライン不可）
-    // ※ マルチプレイ接続時は MultiplayerMod 側の High 優先 Prefix が先に return false し、
+    // ※ マルチプレイ接続時は PrivateServerMod 側の High 優先 Prefix が先に return false し、
     //   ここはスキップされる（純オフライン時のみ動作）。
     [HarmonyPatch(typeof(NCMBManager), "GetAnotherMyHomeMapEditData")]
     public static class NCMBManager_GetAnotherMyHomeMapEditData_Patch

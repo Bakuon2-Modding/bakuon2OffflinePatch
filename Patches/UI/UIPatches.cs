@@ -373,10 +373,12 @@ namespace BakuonOfflinePatch
                 SingletonMonoBehaviour<MissionScreenManager>.Instance.ShowNewCount();
             }
 
-            // デリゲートを呼び出して成功を通知（UpdateMissionData → OnFinishedNetworkProcess_SaveMisisonData）
-            __instance.GetType().GetMethod("RunDelegateOnFinishedNetworkProcess",
-                BindingFlags.Public | BindingFlags.Instance)
-                ?.Invoke(__instance, new object[] { true });
+            // 注意: 元の SaveMissionData はデリゲート (RunDelegateOnFinishedNetworkProcess) を呼ばない。
+            // UpdateMissionData フローの画面更新は MissionScreenManager.UpdateMissionData 自身が
+            // ShowMissionList() を直接呼ぶことで行われる (GameManager 側のハンドラは空実装)。
+            // 以前ここでデリゲートを呼んでいたが、過去に設定された古いデリゲート
+            // (破棄済みシーンのミッション画面の ShowMissionList) が発火して NRE になっていたため削除
+            // (エリア移動等の自動ミッション加算 → SaveMissionData 経由で発生。2026-07-25 のログで確認)。
 
             return false;
         }
