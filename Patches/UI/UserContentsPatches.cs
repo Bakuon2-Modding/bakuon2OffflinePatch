@@ -547,6 +547,10 @@ namespace BakuonOfflinePatch
                     BindingFlags.Public | BindingFlags.Instance)
                     ?.Invoke(__instance, new object[] { true });
 
+                __instance.GetType().GetField("isBusy",
+                    BindingFlags.NonPublic | BindingFlags.Instance)
+                    ?.SetValue(__instance, false);
+
                 return false;
             }
             catch (Exception ex)

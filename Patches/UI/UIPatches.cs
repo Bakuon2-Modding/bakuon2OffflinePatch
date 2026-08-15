@@ -277,6 +277,66 @@ namespace BakuonOfflinePatch
 
 
     // ==========================================
+    // ユーザー投稿: イラスト一覧/ストーリー一覧の×ボタンで閉じられない問題を修正
+    // ==========================================
+    // 本体の CloseIllustDetialWindow / CloseStoryDetialWindow は先頭の
+    // StopCoroutine(coroutine) に null ガードが無い（同クラス内の他4箇所にはある）。
+    // ローカルコンテンツモードでは一覧の件数が少なく、サムネ生成コルーチンが
+    // 1フレームで完走して coroutine が null のままになるため、×ボタン押下時に
+    // 例外で中断し末尾の SlideOutAnimation に到達せずウィンドウが閉じられない。
+    // null ガード付きの同処理で差し替える（GC.Collect 等は OpenRootMenu 同様スキップ）。
+    [HarmonyPatch(typeof(UserContentsScreenManager), "CloseIllustDetialWindow")]
+    public static class UserContentsScreenManager_CloseIllustDetialWindow_Patch
+    {
+        static bool Prefix(UserContentsScreenManager __instance)
+        {
+            if (!OfflineUserContentsStore.IsLocalContentMode) return true;
+
+            try
+            {
+                if (__instance.coroutine != null)
+                    __instance.StopCoroutine(__instance.coroutine);
+                foreach (Transform item in __instance.contentsList_illustDetial.transform)
+                    UnityEngine.Object.Destroy(item.gameObject);
+                SingletonMonoBehaviour<MenuScreenManager>.Instance.SlideOutAnimation(__instance.illustDetialWindow);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError($"[CloseIllustDetialWindow] 閉じ処理でエラー: {ex}");
+                if (__instance.illustDetialWindow != null)
+                    __instance.illustDetialWindow.SetActive(false);
+            }
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(UserContentsScreenManager), "CloseStoryDetialWindow")]
+    public static class UserContentsScreenManager_CloseStoryDetialWindow_Patch
+    {
+        static bool Prefix(UserContentsScreenManager __instance)
+        {
+            if (!OfflineUserContentsStore.IsLocalContentMode) return true;
+
+            try
+            {
+                if (__instance.coroutine != null)
+                    __instance.StopCoroutine(__instance.coroutine);
+                foreach (Transform item in __instance.contentsList_storyDetial.transform)
+                    UnityEngine.Object.Destroy(item.gameObject);
+                SingletonMonoBehaviour<MenuScreenManager>.Instance.SlideOutAnimation(__instance.storyDetialWindow);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.LogError($"[CloseStoryDetialWindow] 閉じ処理でエラー: {ex}");
+                if (__instance.storyDetialWindow != null)
+                    __instance.storyDetialWindow.SetActive(false);
+            }
+            return false;
+        }
+    }
+
+
+    // ==========================================
     // 投書箱: GetUserOpinionData をオフライン対応
     // ==========================================
     [HarmonyPatch(typeof(NCMBManager), "GetUserOpinionData")]
